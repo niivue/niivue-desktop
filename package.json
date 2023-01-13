@@ -22,8 +22,7 @@
     "start": "npm run build-niivue && npm run build-ui && electron src/main.js",
     "dev": "export NIIVUE_DEV_LAUNCH_DELAY=1000; npm run build-niivue && concurrently --kill-others \"electron src/main.js\" \"cd src/UI && npm run dev\"",
     "package": "npm run build-niivue && npm run build-ui && electron-forge package",
-    "make": "npm run build-niivue && npm run build-ui && electron-forge make",
-    "postinstall": "cd src/UI && npm install && cd src/UI/src/niivue && npm install"
+    "make": "npm run build-niivue && npm run build-ui && electron-forge make"
   },
   "author": "",
   "license": "ISC",
