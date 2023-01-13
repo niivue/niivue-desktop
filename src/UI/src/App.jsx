@@ -3,7 +3,7 @@ import { useRef } from 'react'
 import { useEffect } from 'react'
 import { io } from "socket.io-client"
 import './App.css'
-import {Niivue} from "./niivue/dist/niivue.es.js"
+import {Niivue} from "./niivue/dist/niivue.es.js" // niivue must be built for this file to exist (npm run build in niivue). This should be done for you automatically
 
 let urlParams = new URLSearchParams(window.location.search)
 let fileServerPort = urlParams.get('fileServerPort')
@@ -13,8 +13,6 @@ console.log('fileServerPort', fileServerPort)
 console.log('socketServerPort', socketServerPort)
 
 const socket = io(`http://localhost:${socketServerPort}`)
-
-
 
 const NiiVue = () => {
   const canvas = useRef()
@@ -231,7 +229,7 @@ const NiiVue = () => {
     socket.on('setDragType', onSetDragType)
     socket.on('addFiles', onAddFiles)
     socket.on('addStandard', onAddStandard)
-
+    // When we want to emit messages later, rather than just listening...
     //socket.emit("someMessage", someData)
   }, [])
 

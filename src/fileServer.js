@@ -24,7 +24,6 @@ app.get('/file', async function (req, res, next) {
       if (err) {
         next(err)
       } else {
-        //console.log('Sent:', fileName)
       }
     })
   } catch (error) {

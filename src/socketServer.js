@@ -3,7 +3,6 @@ const httpServer = require('http').createServer()
 const socketio = require('socket.io')(httpServer, {
   cors: { origin: '*' }
 })
-// const handlers = require('./socketHandlers')
 const parser = require('minimist')
 
 class SocketServer {
@@ -33,16 +32,12 @@ class SocketServer {
   }
 
   onConnection(socket) {
-    // for (let handleFunc in handlers) {
-    //   handlers[handleFunc](socketio, socket) // must use socketio rather than this.io here
-    // }
     socket.onAny((eventName, value)=>{
         process.send({
             type: eventName, 
             socketID: socket.id,
             value: value
         })
-        //socketio.to(socket.id).emit('hiback')
     })
     // send client connected event to establish socketID
     process.send({
