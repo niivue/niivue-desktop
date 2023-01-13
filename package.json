@@ -1,0 +1,46 @@
+{
+  "name": "niivue-desktop-play",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/main.js",
+  "config": {
+    "forge": {
+      "packagerConfig": {
+        "ignore": "(.git|.vscode|niivue|node_modules|.gitignore|README.md|LICENSE.md)",
+        "icon": "./niivue"
+      },
+      "makers": [
+        {
+          "name": "@electron-forge/maker-zip"
+        }
+    ]
+    }
+  },
+  "scripts": {
+    "build-niivue": "cd src/UI/src/niivue && npm run build",
+    "build-ui": "cd src/UI && npm run build",
+    "start": "npm run build-niivue && npm run build-ui && electron src/main.js",
+    "dev": "export NIIVUE_DEV_LAUNCH_DELAY=1000; npm run build-niivue && concurrently --kill-others \"electron src/main.js\" \"cd src/UI && npm run dev\"",
+    "package": "npm run build-niivue && npm run build-ui && electron-forge package",
+    "make": "npm run build-niivue && npm run build-ui && electron-forge make",
+    "postinstall": "cd src/UI && npm install && cd src/UI/niivue && npm install"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@electron-forge/cli": "^6.0.4",
+    "@electron-forge/maker-deb": "^6.0.4",
+    "@electron-forge/maker-rpm": "^6.0.4",
+    "@electron-forge/maker-squirrel": "^6.0.4",
+    "@electron-forge/maker-zip": "^6.0.4",
+    "concurrently": "^7.6.0",
+    "electron": "^22.0.2"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "electron-squirrel-startup": "^1.0.0",
+    "express": "^4.18.2",
+    "minimist": "^1.2.7",
+    "socket.io": "^4.5.4"
+  }
+}
