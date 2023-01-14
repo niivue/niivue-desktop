@@ -1,21 +1,8 @@
 {
-  "name": "niivue-desktop-play",
+  "name": "niivue-desktop",
   "version": "1.0.0",
   "description": "",
   "main": "src/main.js",
-  "config": {
-    "forge": {
-      "packagerConfig": {
-        "ignore": "(.git|.vscode|niivue|node_modules|.gitignore|README.md|LICENSE.md)",
-        "icon": "./niivue"
-      },
-      "makers": [
-        {
-          "name": "@electron-forge/maker-zip"
-        }
-    ]
-    }
-  },
   "scripts": {
     "build-niivue": "cd src/UI/src/niivue && npm install && npm run build",
     "build-ui": "cd src/UI && npm install && npm run build",
