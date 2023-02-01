@@ -1,7 +1,6 @@
 const { app, BrowserWindow, Menu, MenuItem, systemPreferences, dialog } = require('electron')
 const path = require('path')
 const { fork } = require('child_process')
-
 let win
 let appMenuDefinition
 const backgroundServices = []
@@ -71,6 +70,16 @@ function handleFileServerMessage(message) {
   // msg is expected to be a JSON object (automatically serialized and deserialized by process.send and 'message')
   if (message.type === 'port') {
     onFileServerPort(message.value)
+  }
+}
+
+function handleTcpServerMessage(message) {
+  // msg is expected to be a JSON object (automatically serialized and deserialized by process.send and 'message')
+  if (message.type === 'port') {
+    //onFileServerPort(message.value)
+  } else {
+    //print the message for now
+    console.log('tcp message: ', message)
   }
 }
 
@@ -344,9 +353,16 @@ socketServer = fork(
   [`--port=0`, `--host=${'localhost'}`],
   { env: {FORK: true} }
 )
+
+tcpServer = fork(
+  path.join(__dirname, 'tcpServer.js'),
+  [`--port=0`, `--host=${'localhost'}`],
+  { env: {FORK: true} }
+)
 // add both file server and socket server to our list of open background services (for exiting later)
 backgroundServices.push(fileServer)
 backgroundServices.push(socketServer)
+backgroundServices.push(tcpServer)
 
 fileServer.on('message', (message) => {
   handleFileServerMessage(message)
@@ -354,6 +370,10 @@ fileServer.on('message', (message) => {
 
 socketServer.on('message', (message) => {
   handleSocketServerMessage(message)
+})
+
+tcpServer.on('message', (message) => {
+  handleTcpServerMessage(message)
 })
 
 function createWindow(config={}) {
