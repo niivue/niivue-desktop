@@ -108,6 +108,26 @@ function onViewModeClick(viewMode){
   )
 }
 
+function onRemoveHaze() {
+    dialog.showMessageBox(
+      win,
+      {
+        message: "Image segmentation classes:",
+        buttons: ["1 only bright voxels survive", "2", "3", "4", "5 dim voxels survive"],
+        defaultId: 4, // bound to buttons array
+        cancelId: -1 // bound to buttons array
+      })
+      .then(result => {
+        socketServer.send(
+        {
+          type: 'removeHaze',
+          socketID: socketClientID,
+          value: result.response + 2
+        })
+      }
+    );
+}
+
 function onScreenshotClick(){
   socketServer.send(
     {
@@ -117,6 +137,43 @@ function onScreenshotClick(){
     }
   )
 }
+
+async function onSaveDrawingClick(){
+  /*
+  let isDraw = await socketServer.send(
+            {
+              type: 'isDrawing',
+              socketID: socketClientID,
+              value: null
+            }
+          );;
+  if (!isDraw) {
+    //dialog.showAlertDialog(win, 'no drawing open');
+    retrun;
+  }*/
+  const options = {
+    defaultPath: app.getPath('documents') + '/drawing.nii',
+  }
+  const pObj = dialog.showSaveDialog(win, options);
+  pObj.then(
+    onResolved => {
+      if (!onResolved.canceled) {
+          filename = onResolved.filePath;
+          console.log('sork<<<'+filename);
+          //fs.writeFileSync(filename, arg);
+          socketServer.send(
+            {
+              type: 'saveDrawing',
+              socketID: socketClientID,
+              value: filename
+            }
+          );
+      }
+    },
+    onRejected => {console.log('Promise rejected')}
+  );
+}
+
 
 function onCloseAllImages(){
   socketServer.send(
@@ -289,6 +346,17 @@ function onDragClick(value){
   ) 
 }
 
+function onAddDrawing(filename){
+  console.log('onAddDrawing');
+  socketServer.send(
+    {
+      type: 'addDrawing',
+      socketID: socketClientID,
+      value: filename
+    }
+  )
+}
+
 function onAddStandard(standardFile){
   socketServer.send(
     {
@@ -403,6 +471,9 @@ app.whenReady().then(() => {
       socketServerPort: socketServerPort
     })
   }
+  app.on('open-file', function(ev, path) { // recentdocuments event
+    onAddFiles([path])
+  });
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0 && fileServerPort !== null && socketServerPort !== null) {
       createWindow({
@@ -442,30 +513,51 @@ appMenuDefinition = [
   {
     label: 'File',
     submenu: [
-      { label: 'Add volumes' , 
+      { label: 'Add' , 
+        accelerator: process.platform === 'darwin' ? 'Cmd+A' : 'Ctrl+A',
+        click: () => {
+            dialog.showOpenDialog(win, {
+                properties: ["openFile", "multiSelections"],
+            }).then(result => {
+              console.log('got there')
+                if (result.canceled === true){
+                  console.log('cancelled')
+                } else {
+                  for (let i = 0; i < result.filePaths.length; i++) 
+                    app.addRecentDocument(result.filePaths[i])
+                  onAddFiles(result.filePaths)
+                }
+            });
+          },
+      },
+      { label: 'Add Volumes' , 
         accelerator: process.platform === 'darwin' ? 'Cmd+A' : 'Ctrl+A',
         click: () => {
             dialog.showOpenDialog(win, {
                 properties: ["openFile", "multiSelections"],
                 filters: [
-                  {name: 'volumes', extensions: ['nii.gz', 'nii']}
+                  {name: 'volumes', extensions: ['nii.gz', 'nii', 'mgh', 'mgz']}
                 ]
             }).then(result => {
               console.log('got here')
                 if (result.canceled === true){
                   console.log('cancelled')
                 } else {
-                  console.log(result.filePaths)
+                  for (let i = 0; i < result.filePaths.length; i++) 
+                    app.addRecentDocument(result.filePaths[i])
                   onAddFiles(result.filePaths)
                 }
             });
           },
       },
       {
-        label: 'Add standard',
+        label: 'Add Standard',
         submenu: [
           { label: 'mni152.nii.gz' ,
             click: ()=>{onAddStandard('mni152.nii.gz')},
+          },
+          { label: 'FLAIR' ,
+            click: ()=>{onAddStandard('FLAIR.nii.gz')},
           },
         ]
       }, 
@@ -473,20 +565,31 @@ appMenuDefinition = [
         accelerator: process.platform === 'darwin' ? 'Cmd+D' : 'Ctrl+D',
         click: () => {
             dialog.showOpenDialog( {
-                properties: ["openFile"]
+                properties: ["openFile"],
+                filters: [
+                  {name: 'volumes', extensions: ['nii.gz', 'nii', 'mgh', 'mgz']}
+                ]
             }).then(result => {
                 if (result.canceled === false){
-
+                  onAddDrawing(result.filePaths)
                 }
                     //win.webContents.send('addDrawing', result.filePaths);
             });
           },
       },
+      {
+        "label":"Add Recent",
+        "role":"recentdocuments",
+        "submenu":[
+          {
+            "label":"Clear Recent",
+            "role":"clearrecentdocuments"
+          }
+        ]
+      },
       { label: 'Save Drawing' , 
         accelerator: process.platform === 'darwin' ? 'Cmd+S' : 'Ctrl+S',
-        click: () => { 
-          //win.webContents.send('drawSave', 'draw.nii');
-        },
+        click: onSaveDrawingClick
       },
       { label: 'Take Screenshot' , 
         click: onScreenshotClick
@@ -579,13 +682,13 @@ appMenuDefinition = [
       },
       { label: 'World Space' ,
         type: 'checkbox',
-         id: 'worldSpace',
+        id: 'worldSpace',
         checked: false,
         click: onWorldSpace
       },
       { label: 'Smooth' ,
         type: 'checkbox',
-         id: 'smooth',
+        id: 'smooth',
         checked: true,
         click: onSmooth
       },
@@ -626,6 +729,9 @@ appMenuDefinition = [
             onMoveCrosshair('S')
           },
       },
+      { label: 'Remove Haze' ,
+        click: onRemoveHaze
+      },
       { type: 'separator' },
       { role: 'togglefullscreen' }
     ]
@@ -659,16 +765,34 @@ appMenuDefinition = [
         accelerator: 'Alt+3',
         click: ()=>{onSetPenValue('Blue')}
       },
+      { label: 'Yellow',
+        id: 'Yellow',
+        type: 'radio',
+        accelerator: 'Alt+4',
+        click: ()=>{onSetPenValue('Yellow')}
+      },
+      { label: 'Cyan',
+        id: 'Cyan',
+        type: 'radio',
+        accelerator: 'Alt+5',
+        click: ()=>{onSetPenValue('Cyan')}
+      },
+      { label: 'Purple',
+        id: 'Purple',
+        type: 'radio',
+        accelerator: 'Alt+6',
+        click: ()=>{onSetPenValue('Purple')}
+      },
       { label: 'Erase',
         id: 'Erase',
         type: 'radio',
-        accelerator: 'Alt+4',
+        accelerator: 'Alt+7',
         click: ()=>{onSetPenValue('Erase')}
       },
       { label: 'Erase Cluster',
         id: 'EraseCluster',
         type: 'radio',
-        accelerator: 'Alt+5',
+        accelerator: 'Alt+8',
         click: ()=>{onSetPenValue('EraseCluster')}
       },
       { type: 'separator' },
@@ -720,6 +844,12 @@ appMenuDefinition = [
         checked: false,
         click: ()=>{onDragClick('dragPan')}
       },
+      { label: 'Slicer3D' ,
+        type: 'radio',
+         id: 'dragPan',
+        checked: false,
+        click: ()=>{onDragClick('dragSlicer3D')}
+      },
       { label: 'None' ,
         type: 'radio',
          id: 'dragNone',
@@ -770,5 +900,12 @@ appMenuDefinition = [
     ]
   }
 ]
-let menu = Menu.buildFromTemplate(appMenuDefinition)
-Menu.setApplicationMenu(menu)
+
+//let menu = Menu.buildFromTemplate(appMenuDefinition)
+//Menu.setApplicationMenu(menu)
+
+const menu = Menu.buildFromTemplate(appMenuDefinition)
+
+app.whenReady().then(() => {
+  Menu.setApplicationMenu(menu)
+})

@@ -19,14 +19,29 @@ const NiiVue = () => {
   const [isFilled, setIsFilled] = useState(true)
 
   useEffect(() => {
-    const nv = new Niivue({})
+    const nv = new Niivue({show3Dcrosshair: true})
 
+
+    function onRemoveHaze(level){
+      nv.removeHaze(level)
+    }
     function onSetSliceType(sliceType){
       nv.setSliceType(sliceType)
     }
 
     function onScreenshot(){
       nv.saveScene()
+    }
+
+    async function isDrawingOpen(){
+      console.log("fork", nv.drawBitmap);
+      return (nv.drawBitmap !== null);
+    }
+
+    function onSaveDrawing(fnm){
+      let url = `http://localhost:${fileServerPort}/file?filename=${fnm}`
+      console.log('SaveDrawing', url);
+      nv.saveImage(url);
     }
 
     function onCloseAllImages(){
@@ -123,6 +138,18 @@ const NiiVue = () => {
           nv.setDrawingEnabled(true)
           nv.setPenValue(3, isFilled)
           break
+        case 'Yellow':
+          nv.setDrawingEnabled(true)
+          nv.setPenValue(4, isFilled)
+          break
+        case 'Cyan':
+          nv.setDrawingEnabled(true)
+          nv.setPenValue(5, isFilled)
+          break
+        case 'Purple':
+          nv.setDrawingEnabled(true)
+          nv.setPenValue(6, isFilled)
+          break
         case 'EraseCluster':
           nv.setDrawingEnabled(true)
           nv.setPenValue(-0, isFilled)
@@ -172,6 +199,9 @@ const NiiVue = () => {
         case "dragPan":
           nv.opts.dragMode = nv.dragModes.pan
           break
+        case "dragSlicer3D":
+          nv.opts.dragMode = nv.dragModes.slicer3D
+          break
         default:
           break
       }
@@ -182,12 +212,30 @@ const NiiVue = () => {
       filePaths.forEach(async (fileToLoad) => {
         let parts = fileToLoad.split('/')
         let name = parts[parts.length-1]
+        let isMesh = nv.isMeshExt(name)
         let url = `http://localhost:${fileServerPort}/file?filename=${fileToLoad}`
         console.log(url)
-        await nv.addVolumeFromUrl({
-          url: url,
-          name: name
-        })
+        if (isMesh) {
+          await nv.addMeshFromUrl({
+            url: url,
+            name: name
+          })
+        } else {
+          await nv.addVolumeFromUrl({
+            url: url,
+            name: name
+          })
+        }
+      })
+    }
+
+    async function onAddDrawing(filePaths){
+      filePaths.forEach(async (fileToLoad) => {
+        let parts = fileToLoad.split('/')
+        //let name = parts[parts.length-1]
+        let url = `http://localhost:${fileServerPort}/file?filename=${fileToLoad}`
+        console.log("onAddDrawing", url)
+        await nv.loadDrawingFromUrl(url)
       })
     }
 
@@ -202,15 +250,19 @@ const NiiVue = () => {
 
     nv.attachToCanvas(canvas.current)
     nv.loadVolumes([
-      {url: `http://localhost:${fileServerPort}/standard/mni152.nii.gz`}
+      {url: `http://localhost:${fileServerPort}/standard/FLAIR.nii.gz`}
     ])
     socket.on("connect", () => {
       console.log('connected to socket',socket.id)
     });
     
     // register all of the event handlers
+    
+    socket.on("removeHaze", onRemoveHaze)
     socket.on("setSliceType", onSetSliceType)
     socket.on("screenshot", onScreenshot)
+    socket.on("isDrawing", isDrawingOpen);
+    socket.on("saveDrawing", onSaveDrawing)
     socket.on("closeAllImages", onCloseAllImages)
     socket.on("drawUndo", onDrawUndo)
     socket.on("showColorbar", onShowColorbar)
@@ -229,6 +281,7 @@ const NiiVue = () => {
     socket.on('setDragType', onSetDragType)
     socket.on('addFiles', onAddFiles)
     socket.on('addStandard', onAddStandard)
+    socket.on('addDrawing', onAddDrawing)
     // When we want to emit messages later, rather than just listening...
     //socket.emit("someMessage", someData)
   }, [])
