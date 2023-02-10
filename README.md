@@ -4,7 +4,7 @@ This is the desktop app that builds on the core [NiiVue](https://github.com/niiv
 
 # Development and Building
 
-1. `git clone --recurse-submodules git@github.com:niivue/niivue-desktop.git`
+1. `git clone --recurse-submodules https://github.com/niivue/niivue-desktop.git`
 2. `cd niivue-desktop`
 3. `npm install`
 
