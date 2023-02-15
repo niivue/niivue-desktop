@@ -8,6 +8,9 @@ const {
 } = require("electron");
 const path = require("path");
 const { fork } = require("child_process");
+const { v4: uuidv4 } = require("uuid");
+const fs = require("fs");
+
 let win;
 let appMenuDefinition;
 const backgroundServices = [];
@@ -17,9 +20,11 @@ let socketClientID = null;
 let fileServer = {};
 let socketServer = {};
 
-const states = ["initial", "saving"];
+const states = ["initial", "saving", "waiting-for-upload"];
 const INITIAL = 0;
 const SAVING = 1;
+const WAITING_FOR_UPLOAD = 2;
+
 let currentState = states[INITIAL];
 
 let isDrawingOpen = false;
@@ -110,32 +115,38 @@ function handleSocketServerMessage(message) {
       if (currentState === states[SAVING]) {
         currentState = states[INITIAL]; // Reset state to avoid duplicate messages
         const event = JSON.parse(message.value);
-        isDrawingOpen = event.isDrawingOpen;
-        if (isDrawingOpen) {          
-          const options = {
-            defaultPath: app.getPath("documents") + `${event.baseVolumeName}-drawing.nii`,
-          };
-          const pObj = dialog.showSaveDialog(win, options);
-          pObj.then(
-            (onResolved) => {
-              if (!onResolved.canceled) {
-                filename = onResolved.filePath;
-                console.log("sork<<<" + filename);
-                //fs.writeFileSync(filename, arg);
-                socketServer.send({
-                  type: "saveDrawing",
-                  socketID: socketClientID,
-                  value: filename,
-                });
-              }
-            },
-            (onRejected) => {
-              console.log("Promise rejected");
-            }
-          );
+        if (event.isDrawingOpen) {
+          currentState = states[WAITING_FOR_UPLOAD];
+          const filename = `${event.baseVolumeName}-drawing-${uuidv4()}.nii`;
+          socketServer.send({
+            type: "saveDrawing",
+            socketID: socketClientID,
+            value: filename,
+          });
         } else {
           dialog.showMessageBox({ title: "Error", message: "No drawing open" });
         }
+      }
+      break;
+    case "drawingUploaded":
+      if (currentState === states[WAITING_FOR_UPLOAD]) {
+        currentState = states[INITIAL];
+        const uploadedFileName = message.value;
+        const options = {
+          defaultPath: path.join(app.getPath("documents"), uploadedFileName),
+        };
+        const pObj = dialog.showSaveDialog(win, options);
+        pObj.then(
+          (onResolved) => {
+            if (!onResolved.canceled) {
+              const saveFilePath = onResolved.filePath;
+              fs.renameSync(path.join(__dirname, "uploaded", uploadedFileName), saveFilePath);
+            }
+          },
+          (onRejected) => {
+            console.log("Promise rejected");
+          }
+        );
       }
       break;
     case "SOME OTHER MESSAGE HERE":

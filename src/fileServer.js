@@ -3,8 +3,13 @@ const app = express()
 const cors = require('cors')
 const server = require('http').createServer(app);
 const parser = require('minimist')
+const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const bodyParser = require('body-parser')
+
+const jsonParser = bodyParser.json()
+const rawParser = bodyParser.raw({limit: '25mb'})
 
 app.use(cors())
 const staticFilePath = path.join(__dirname, 'UI', 'dist')
@@ -12,10 +17,6 @@ app.use('/gui', express.static(staticFilePath))
 
 const standardFilePath = path.join(__dirname, 'images', 'standard')
 app.use('/standard', express.static(standardFilePath))
-
-
-app.use(express.json({limit: '25mb'}));
-app.use(express.urlencoded({limit: '25mb'}));
 
 app.get('/file', async function (req, res, next) {
   var fileName = req.query.filename
@@ -36,12 +37,10 @@ app.get('/file', async function (req, res, next) {
 
 })
 
-app.post('/file', jsonParser, async function(req, res) {
-  console.log('file posted')
-  console.log(req.query)
+app.put('/file', rawParser, async function(req, res) {  
   const fileName = req.query.filename;
-  const filePath = path.join(__dirname, fileName)
-  fs.writeFileSync(filePath, JSON.stringify(req.body))
+  const filePath = path.join(__dirname, 'uploaded', fileName)
+  fs.writeFileSync(filePath, req.body)
   res.sendStatus(200)
 })
 
