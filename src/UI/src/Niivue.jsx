@@ -33,15 +33,21 @@ const NiiVue = () => {
       nv.saveScene()
     }
 
-    async function isDrawingOpen(){
+    function isDrawingOpen(){
       console.log("fork", nv.drawBitmap);
-      return (nv.drawBitmap !== null);
+      let event = {isDrawingOpen: nv.drawBitmap !== null, baseVolumeName: nv.volumes[0].name};
+      socket.emit("isDrawingOpen", JSON.stringify(event))
     }
 
     function onSaveDrawing(fnm){
       let url = `http://localhost:${fileServerPort}/file?filename=${fnm}`
       console.log('SaveDrawing', url);
-      nv.saveImage(url);
+      if(nv.drawBitmap) {
+        nv.saveImage(url, true);
+      }
+      else {
+        alert('no drawing to save')
+      }
     }
 
     function onCloseAllImages(){
