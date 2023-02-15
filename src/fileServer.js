@@ -13,6 +13,10 @@ app.use('/gui', express.static(staticFilePath))
 const standardFilePath = path.join(__dirname, 'images', 'standard')
 app.use('/standard', express.static(standardFilePath))
 
+
+app.use(express.json({limit: '25mb'}));
+app.use(express.urlencoded({limit: '25mb'}));
+
 app.get('/file', async function (req, res, next) {
   var fileName = req.query.filename
   if (typeof fileName === 'undefined') {
@@ -31,6 +35,16 @@ app.get('/file', async function (req, res, next) {
   }
 
 })
+
+app.post('/file', jsonParser, async function(req, res) {
+  console.log('file posted')
+  console.log(req.query)
+  const fileName = req.query.filename;
+  const filePath = path.join(__dirname, fileName)
+  fs.writeFileSync(filePath, JSON.stringify(req.body))
+  res.sendStatus(200)
+})
+
 
 class FileServer {
   // 0 will result in a random open port being assigned 
