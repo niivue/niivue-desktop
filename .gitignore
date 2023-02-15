@@ -25,4 +25,4 @@ dist-ssr
 *.sw?
 
 #uploaded files
-uploaded/
+uploaded/*.*
