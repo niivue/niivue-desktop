@@ -27,7 +27,7 @@ const WAITING_FOR_UPLOAD = 2;
 
 let currentState = states[INITIAL];
 
-let isDrawingOpen = false;
+app.commandLine.appendSwitch('trace-warnings');
 
 const isMac = process.platform === "darwin";
 if (isMac) {
@@ -131,9 +131,10 @@ function handleSocketServerMessage(message) {
     case "drawingUploaded":
       if (currentState === states[WAITING_FOR_UPLOAD]) {
         currentState = states[INITIAL];
-        const uploadedFileName = message.value;
+        const event = JSON.parse(message.value);
+        const drawingFileName = `${event.baseVolumeName}-drawing.nii`;
         const options = {
-          defaultPath: path.join(app.getPath("documents"), uploadedFileName),
+          defaultPath: path.join(app.getPath("documents"), drawingFileName),
         };
         const pObj = dialog.showSaveDialog(win, options);
         pObj.then(

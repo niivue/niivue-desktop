@@ -35,15 +35,13 @@ const NiiVue = () => {
 
     function isDrawingOpen(){
       console.log("fork", nv.drawBitmap);
-      let event = {isDrawingOpen: nv.drawBitmap !== null, baseVolumeName: nv.volumes[0].name.split('.')[0]};
+      const event = {isDrawingOpen: nv.drawBitmap !== null, baseVolumeName: nv.volumes[0].name.split('.')[0]}
       socket.emit("isDrawingOpen", JSON.stringify(event))
     }
 
     async function onSaveDrawing(fnm){
       let url = `http://localhost:${fileServerPort}/file?filename=${fnm}`
-      let dataArray = await nv.volumes[0].saveToUint8Array(fnm, nv.drawBitmap);
-      console.log('array is ');
-      console.log(dataArray);
+      let dataArray = await nv.volumes[0].saveToUint8Array(fnm, nv.drawBitmap)
       const response = await fetch(url, {
         method: 'PUT',
         headers: {
@@ -51,11 +49,10 @@ const NiiVue = () => {
         },
         body: new Blob([dataArray], {type: 'application/octet-stream'})
       });
-
       
-      console.log(response);
       if(response.ok) {
-        socket.emit("drawingUploaded", fnm)
+        const event = {drawingFileName: fnm, baseVolumeName: nv.volumes[0].name.split('.')[0]} 
+        socket.emit("drawingUploaded", JSON.stringify(event))
       }
       else {
         throw new Error('Network response was not OK')
