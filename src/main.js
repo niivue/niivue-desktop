@@ -133,6 +133,7 @@ function handleSocketServerMessage(message) {
         currentState = states[INITIAL];
         const event = JSON.parse(message.value);
         const drawingFileName = `${event.baseVolumeName}-drawing.nii`;
+        const uploadedFileName = event.drawingFileName;
         const options = {
           defaultPath: path.join(app.getPath("documents"), drawingFileName),
         };
