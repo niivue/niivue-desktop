@@ -445,16 +445,21 @@ tcpServer.on('message', (message) => {
 })
 
 function createWindow(config={}) {
+  const { screen } = require('electron')
+  const primaryDisplay = screen.getPrimaryDisplay()
+  const { width, height } = primaryDisplay.workAreaSize
   win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: Math.round(width * 0.75),
+    height: height,
+    minWidth: Math.round(width * 0.25),
+    minHeight: Math.round(height * 0.5),
     title: "NiiVue",
     webPreferences: {
       //preload: path.join(__dirname, 'preload.js')
     }
   })
   if (process.env.NIIVUE_DEV_LAUNCH_DELAY){
-    let viteDevPort = 8888
+    let viteDevPort = 8888 // could be read from an env var in the future
     console.log('viteDevPort', viteDevPort)
     let url = `http://localhost:${viteDevPort}?fileServerPort=${config.fileServerPort}&socketServerPort=${config.socketServerPort}`
     setTimeout(()=>{
@@ -473,6 +478,7 @@ app.whenReady().then(() => {
       socketServerPort: socketServerPort
     })
   }
+  Menu.setApplicationMenu(menu)
   app.on('open-file', function(ev, path) { // recentdocuments event
     onAddFiles([path])
   });
@@ -866,6 +872,8 @@ appMenuDefinition = [
     submenu: [
       { role: 'minimize' },
       { role: 'zoom' },
+      { role: 'reload' },
+      { role: 'forceReload' },
       ...(isMac ? [
         { type: 'separator' },
         { role: 'front' },
@@ -903,11 +911,4 @@ appMenuDefinition = [
   }
 ]
 
-//let menu = Menu.buildFromTemplate(appMenuDefinition)
-//Menu.setApplicationMenu(menu)
-
 const menu = Menu.buildFromTemplate(appMenuDefinition)
-
-app.whenReady().then(() => {
-  Menu.setApplicationMenu(menu)
-})
