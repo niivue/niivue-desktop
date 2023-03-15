@@ -454,7 +454,9 @@ function createWindow(config={}) {
     }
   })
   if (process.env.NIIVUE_DEV_LAUNCH_DELAY){
-    let url = `http://localhost:8080?fileServerPort=${config.fileServerPort}&socketServerPort=${config.socketServerPort}`
+    let viteDevPort = 8888
+    console.log('viteDevPort', viteDevPort)
+    let url = `http://localhost:${viteDevPort}?fileServerPort=${config.fileServerPort}&socketServerPort=${config.socketServerPort}`
     setTimeout(()=>{
       win.loadURL(url)
     }, Number(process.env.NIIVUE_DEV_LAUNCH_DELAY))

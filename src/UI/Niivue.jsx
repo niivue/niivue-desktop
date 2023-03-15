@@ -3,7 +3,7 @@ import { useRef } from 'react'
 import { useEffect } from 'react'
 import { io } from "socket.io-client"
 import './Niivue.css'
-import {Niivue} from "./niivue/dist/niivue.es.js" // niivue must be built for this file to exist (npm run build in niivue). This should be done for you automatically
+import {Niivue} from "@niivue"
 
 let urlParams = new URLSearchParams(window.location.search)
 let fileServerPort = urlParams.get('fileServerPort')
