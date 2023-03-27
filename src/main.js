@@ -66,6 +66,24 @@ function onExampleMessage(message){
   )
 }
 
+function onSyncImageList(message)
+{
+  console.log(message)
+  let appMenu = Menu.getApplicationMenu()
+  let imagesMenuList = appMenu.items.find((item) => item.id === "images").submenu;
+  imagesMenuList.items=[];
+  imagesMenuList.clear();
+  message.forEach((image)=>{
+    let newItem = new MenuItem({
+      label: image,
+      click: ()=>{console.log('clicked', image)},
+      submenu:[]
+    })
+    imagesMenuList.append(newItem)
+  })
+  //Menu.setApplicationMenu(appMenu)
+}
+
 function handleFileServerMessage(message) {
   // msg is expected to be a JSON object (automatically serialized and deserialized by process.send and 'message')
   if (message.type === 'port') {
@@ -89,6 +107,9 @@ function handleSocketServerMessage(message) {
   switch (message.type) {
     case 'port':
       onSocketServerPort(message.value)  
+      break
+    case 'syncImageList':
+      onSyncImageList(message.value)
       break
     case 'SOME OTHER MESSAGE HERE':
       // do something
@@ -367,6 +388,15 @@ function onAddStandard(standardFile){
   )
 }
 
+function refreshImages(){
+  socketServer.send(
+    {
+      type: 'syncImages',
+      socketID: socketClientID
+    }
+  )
+}
+
 function onAddFiles(filePaths){
   console.log('filePaths', filePaths)
   socketServer.send(
@@ -600,16 +630,11 @@ appMenuDefinition = [
       isMac ? { role: 'close' } : { role: 'quit' }
     ]
   },
-  // {
-  //   label: 'Images',
-  //   id: 'images',
-  //   submenu:[
-  //     {
-  //       label: 'test'
-  //     }
-  //   ]
-
-  // },
+  {
+    label: 'Images',
+    id: 'images',
+    submenu:[]
+  },
   {
     label: 'Edit',
     submenu: [

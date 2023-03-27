@@ -248,6 +248,18 @@ const NiiVue = () => {
       })
     }
 
+    function onSyncImages(){
+      console.log("onSyncImages")
+      let value = []
+      nv.volumes.forEach(element => {
+        value.push(element.name)
+      });
+      socket.emit("syncImageList", value)
+    }
+
+    nv.onImageLoaded = onSyncImages;
+    nv.onCloseAllImages = onSyncImages;
+
     nv.attachToCanvas(canvas.current)
     nv.loadVolumes([
       {url: `http://localhost:${fileServerPort}/standard/FLAIR.nii.gz`}
@@ -282,6 +294,8 @@ const NiiVue = () => {
     socket.on('addFiles', onAddFiles)
     socket.on('addStandard', onAddStandard)
     socket.on('addDrawing', onAddDrawing)
+
+    socket.on('syncImages', onSyncImages)
     // When we want to emit messages later, rather than just listening...
     //socket.emit("someMessage", someData)
   }, [])
