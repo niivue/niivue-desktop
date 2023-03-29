@@ -247,14 +247,26 @@ const NiiVue = () => {
         name: standardFile
       })
     }
-
+    
     function onSyncImages(){
       console.log("onSyncImages")
+      console.log(nv.id)
       let value = []
       nv.volumes.forEach(element => {
-        value.push(element.name)
+        value.push(element.id)
       });
+      console.log(value)
       socket.emit("syncImageList", value)
+    }
+    function onSyncColorMaps() {
+      console.log("onSyncColorMaps")
+      socket.emit("syncColorMaps", nv.colorMaps())
+    }
+
+    function onSetImageColor(message) {
+      console.log("onSetImageColor")
+      console.log(message)
+      nv.setColorMap(message.id, message.color)
     }
 
     nv.onImageLoaded = onSyncImages;
@@ -296,6 +308,8 @@ const NiiVue = () => {
     socket.on('addDrawing', onAddDrawing)
 
     socket.on('syncImages', onSyncImages)
+    socket.on('syncColorMaps', onSyncColorMaps)
+    socket.on('setImageColor', onSetImageColor)
     // When we want to emit messages later, rather than just listening...
     //socket.emit("someMessage", someData)
   }, [])

@@ -66,22 +66,90 @@ function onExampleMessage(message){
   )
 }
 
+let image_list = []
+let color_list = []
+
 function onSyncImageList(message)
 {
+  console.log("onSyncImageList")
   console.log(message)
+  refreshColorMapTypes()
+  image_list = message;
+  doRefreshImages()
+  //Menu.setApplicationMenu(appMenu)
+}
+
+function doSetColors() {
+  let appMenu = Menu.getApplicationMenu()
+  let imagesMenuList = appMenu.items.find((item) => item.id === "images").submenu;
+  imagesMenuList.items.forEach((menuImage)=>{
+    let color_submenu = menuImage.submenu.items.find((item)=>item.label=="Color Scheme").submenu;
+    color_submenu.items=[];
+    color_submenu.clear();
+    color_list.forEach((color)=>{
+      let newItem = new MenuItem(
+        {
+          label: color,
+          click: ()=>{
+            console.log("color clicked")
+            onSetImageColor(menuImage.label, color)
+          }
+        }
+      );
+      color_submenu.append(newItem)
+    })
+  })
+  Menu.setApplicationMenu(appMenu)
+}
+
+function doRefreshImages()
+{
   let appMenu = Menu.getApplicationMenu()
   let imagesMenuList = appMenu.items.find((item) => item.id === "images").submenu;
   imagesMenuList.items=[];
   imagesMenuList.clear();
-  message.forEach((image)=>{
+  image_list.forEach((image)=>{
+    console.log("doRefreshImages")
+    console.log(image)
     let newItem = new MenuItem({
       label: image,
       click: ()=>{console.log('clicked', image)},
-      submenu:[]
+      submenu:[
+        {
+          label : 'Color Scheme',
+          submenu : []
+        }
+      ]
     })
     imagesMenuList.append(newItem)
   })
-  //Menu.setApplicationMenu(appMenu)
+  doSetColors()
+  Menu.setApplicationMenu(appMenu)
+}
+
+function onSyncColorMap(message)
+{
+  console.log('onSyncColorMap')
+  console.log(message)
+  color_list = message;
+  doSetColors()
+}
+
+function onSetImageColor(vol_id, colormap)
+{
+  console.log("onSetImageColor")
+  console.log(vol_id)
+  console.log(colormap)
+  socketServer.send(
+    {
+      type: 'setImageColor',
+      socketID: socketClientID,
+      value: {
+        id: vol_id,
+        color: colormap
+      } 
+    }
+  )
 }
 
 function handleFileServerMessage(message) {
@@ -110,6 +178,9 @@ function handleSocketServerMessage(message) {
       break
     case 'syncImageList':
       onSyncImageList(message.value)
+      break
+    case 'syncColorMaps':
+      onSyncColorMap(message.value)
       break
     case 'SOME OTHER MESSAGE HERE':
       // do something
@@ -388,10 +459,20 @@ function onAddStandard(standardFile){
   )
 }
 
-function refreshImages(){
+function refreshImages() {
   socketServer.send(
     {
       type: 'syncImages',
+      socketID: socketClientID
+    }
+  )
+}
+
+function refreshColorMapTypes() {
+  console.log("refreshColorMapTypes")
+  socketServer.send(
+    {
+      type: 'syncColorMaps',
       socketID: socketClientID
     }
   )
@@ -436,6 +517,7 @@ function onAddFiles(filePaths){
       Menu.setApplicationMenu(appMenu)
     })
   }
+  console.log("onAddFiles")
 }
 
 
