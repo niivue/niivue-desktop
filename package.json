@@ -5,7 +5,7 @@
   "main": "src/main.js",
   "scripts": {
     "build-ui": "vite build",
-    "dev-ui": "vite --host --port 8888",
+    "dev-ui": "vite --host --port 8899",
     "dev": "export NIIVUE_DEV_LAUNCH_DELAY=1000; concurrently --kill-others \"electron src/main.js\" \"npm run dev-ui\"",
     "package": "npm run build-ui && electron-forge package",
     "make": "npm run build-ui && electron-forge make"

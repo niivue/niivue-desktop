@@ -459,7 +459,7 @@ function createWindow(config={}) {
     }
   })
   if (process.env.NIIVUE_DEV_LAUNCH_DELAY){
-    let viteDevPort = 8888 // could be read from an env var in the future
+    let viteDevPort = 8899 // could be read from an env var in the future
     console.log('viteDevPort', viteDevPort)
     let url = `http://localhost:${viteDevPort}?fileServerPort=${config.fileServerPort}&socketServerPort=${config.socketServerPort}`
     setTimeout(()=>{

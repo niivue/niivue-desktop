@@ -47,6 +47,10 @@ function Layer(props) {
   const [color, setColor] = React.useState(image.colorMap)
   let ArrowIcon = detailsOpen ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />
   let allColors = image.colorMaps().map((colorName) => {
+    // omit drawing color maps
+    if (colorName.startsWith("$")) {
+      return
+    }
     return (
       <MenuItem value={colorName} key={colorName}>
 
