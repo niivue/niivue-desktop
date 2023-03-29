@@ -13,21 +13,19 @@ This is the desktop app that builds on the core [NiiVue](https://github.com/niiv
 note that the electron code does not offer hot reload. Hot reload only applies to the UI if you make changes to those files while the app is running. 
 
 ```
-npm run dev
-```
-
-## Run app without hot reload before packaging 
-
-```
-npm run start
+# You MUST supply the path to the niivue library on your system
+# for example if you cloned niivue to ~/github/niivue/niivue
+export NIIVUE_PATH=$HOME/github/niivue/niivue; npm run dev
 ```
 
 ## Package app
 
-does not bundle for distribution
+does not zip for distribution, just makes an app that can be run outside of dev mode
 
 ```
-npm run package
+# You MUST supply the path to the niivue library on your system
+# for example if you cloned niivue to ~/github/niivue/niivue
+export NIIVUE_PATH=$HOME/github/niivue/niivue; npm run package
 ```
 
 ## Package and bundle
@@ -35,9 +33,7 @@ npm run package
 creates a zip to share
 
 ```
-npm run make
-```
-
-
-
-## 
+# You MUST supply the path to the niivue library on your system
+# for example if you cloned niivue to ~/github/niivue/niivue
+export NIIVUE_PATH=$HOME/github/niivue/niivue; npm run make
+``` 

@@ -7,7 +7,7 @@ const os = require('os');
 const path = require('path');
 
 app.use(cors())
-const staticFilePath = path.join(__dirname, 'UI', 'dist')
+const staticFilePath = path.join(__dirname, 'ui', 'dist-ui')
 app.use('/gui', express.static(staticFilePath))
 
 const standardFilePath = path.join(__dirname, 'images', 'standard')
