@@ -9,11 +9,20 @@ let socketServerPort = null
 let socketClientID = null
 let fileServer = {}
 let socketServer = {}
+const appState = {
+  isDrawing : false
+}
 
 const isMac = process.platform === 'darwin'
 if (isMac) {
   systemPreferences.setUserDefault('NSDisabledDictationMenuItem', 'boolean', true)
   systemPreferences.setUserDefault('NSDisabledCharacterPaletteMenuItem', 'boolean', true)
+}
+
+function onIsDrawingOpen(value){
+  appState.isDrawing = value
+  menu.getMenuItemById('saveDrawing').enabled = value
+  menu.getMenuItemById('drawUndo').enabled = value
 }
 
 function onFileServerPort(port) {
@@ -90,6 +99,9 @@ function handleSocketServerMessage(message) {
     case 'port':
       onSocketServerPort(message.value)  
       break
+    case 'isDrawingOpen':
+      onIsDrawingOpen(message.value)
+      break
     case 'SOME OTHER MESSAGE HERE':
       // do something
       break
@@ -139,28 +151,23 @@ function onScreenshotClick(){
 }
 
 async function onSaveDrawingClick(){
-  /*
-  let isDraw = await socketServer.send(
-            {
-              type: 'isDrawing',
-              socketID: socketClientID,
-              value: null
-            }
-          );;
+
+  let isDraw = appState.isDrawing
   if (!isDraw) {
-    //dialog.showAlertDialog(win, 'no drawing open');
-    retrun;
-  }*/
+    dialog.showMessageBox(win, {
+      message: 'No drawing is open',
+      type: 'info',
+    });
+    return;
+  }
   const options = {
-    defaultPath: app.getPath('documents') + '/drawing.nii',
+    defaultPath: path.join(app.getPath('documents'), 'drawing.nii'),
   }
   const pObj = dialog.showSaveDialog(win, options);
   pObj.then(
     onResolved => {
       if (!onResolved.canceled) {
           filename = onResolved.filePath;
-          console.log('sork<<<'+filename);
-          //fs.writeFileSync(filename, arg);
           socketServer.send(
             {
               type: 'saveDrawing',
@@ -489,6 +496,7 @@ app.whenReady().then(() => {
     })
   }
   Menu.setApplicationMenu(menu)
+  onIsDrawingOpen()
   app.on('open-file', function(ev, path) { // recentdocuments event
     onAddFiles([path])
   });
@@ -498,6 +506,7 @@ app.whenReady().then(() => {
         fileServerPort: fileServerPort,
         socketServerPort: socketServerPort
       })
+      onIsDrawingOpen()
     }
   })
 })
@@ -606,6 +615,7 @@ appMenuDefinition = [
         ]
       },
       { label: 'Save Drawing' , 
+        id: 'saveDrawing',
         accelerator: process.platform === 'darwin' ? 'Cmd+S' : 'Ctrl+S',
         click: onSaveDrawingClick
       },
@@ -632,6 +642,7 @@ appMenuDefinition = [
     label: 'Edit',
     submenu: [
       { label: 'Undo Draw' ,
+        id: 'drawUndo',
         accelerator: process.platform === 'darwin' ? 'Cmd+Z' : 'Ctrl+Z',
         click: onDrawUndo
       },
