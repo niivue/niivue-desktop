@@ -44,7 +44,7 @@ function makeColorGradients(colorMapValues) {
 function Layer(props) {
   const image = props.image
   const colorMaps = props.colorMaps || []
-  const [detailsOpen, setDetailsOpen] = React.useState(false)
+  const [detailsOpen, setDetailsOpen] = React.useState(true)
   const [color, setColor] = React.useState(image.colorMap)
   let ArrowIcon = detailsOpen ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />
   let allColors = colorMaps.map((colorName) => {
@@ -515,24 +515,32 @@ function NiiVue() {
   }
 
   // runs when the user initiates adding files from the menu bar
-  async function onAddFiles(filePaths) {
-    filePaths.forEach(async (fileToLoad) => {
-      let parts = fileToLoad.split('/')
+  async function onAddFiles(inputs) {
+    console.log(inputs)
+    for (let i = 0; i < inputs.length; i++) {
+      let input = inputs[i]
+      let parts = input.url.split('/')
       let name = parts[parts.length - 1]
       let isMesh = nv.isMeshExt(name)
-      let url = `http://localhost:${fileServerPort}/file?filename=${fileToLoad}`
+      let url = `http://localhost:${fileServerPort}/file?filename=${input.url}`
       if (isMesh) {
         await nv.addMeshFromUrl({
           url: url,
-          name: name
+          name: name,
+          colorMap: input.colorMap || '',
+          opacity: input.opacity || 1.0,
         })
       } else {
         await nv.addVolumeFromUrl({
           url: url,
-          name: name
+          name: name,
+          colorMap: input.colorMap || '',
+          opacity: input.opacity || 1.0,
+          cal_min: input.min || NaN,
+          cal_max: input.max || NaN,
         })
       }
-    })
+    }
   }
 
   // runs when the user initiates adding a drawing from the menu bar
@@ -577,9 +585,9 @@ function NiiVue() {
       // link niivue to the canvas
       nv.attachToCanvas(canvas.current)
       // load mni152.nii.gz as the default image
-      nv.loadVolumes([
-        { url: `http://localhost:${fileServerPort}/standard/mni152.nii.gz` }
-      ])
+      // nv.loadVolumes([
+      //   { url: `http://localhost:${fileServerPort}/standard/mni152.nii.gz` }
+      // ])
 
       // set the onImageLoaded callback
       nv.onImageLoaded = onImageLoaded
