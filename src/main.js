@@ -9,6 +9,9 @@ let socketServerPort = null
 let socketClientID = null
 let fileServer = {}
 let socketServer = {}
+let tcpServer = {}
+
+// app state is a global object shared throughout the main process methods
 const appState = {
   isDrawing : false
 }
@@ -37,6 +40,11 @@ function onFileServerPort(port) {
         fileServerPort: fileServerPort,
         socketServerPort: socketServerPort
       })
+      onIsDrawingOpen()
+      const inputs = parseCommandLineArgs()
+      if (inputs.length > 0){
+        onAddFiles(inputs)
+      }
     }
   }
 }
@@ -53,6 +61,11 @@ function onSocketServerPort(port) {
         fileServerPort: fileServerPort,
         socketServerPort: socketServerPort
       })
+      onIsDrawingOpen()
+      const inputs = parseCommandLineArgs()
+      if (inputs.length > 0){
+        onAddFiles(inputs)
+      }
     }
   }
 }
@@ -108,6 +121,58 @@ function handleSocketServerMessage(message) {
     default:
       console.log('unsupported message', message.type)
   }
+}
+
+function parseCommandLineArgs() {
+  const args = process.argv.slice(1)
+  const imagesToLoad = onCommandLineArgs(args)
+  return imagesToLoad
+}
+
+function convertArgToNiiVueKey(arg) {
+  switch (arg) {
+    case 'colormap':
+      return 'colorMap'
+    case 'input':
+      return 'url'
+    case 'min':
+      return 'cal_min'
+    case 'max':
+      return 'cal_max'
+    case 'opacity':
+      return 'opacity'
+    default:
+      return ''
+  }
+}
+
+function onCommandLineArgs(args) {
+  // loop through args and find all --input flag and create objects for them.
+  // each flag after --input should be a new property of the object until the next --input flag
+  // if the next flag is --input, then create a new object
+  // if the next flag is not --input, then add it as a property of the current object
+  const imagesToLoad = []
+  var obj = {}
+  let imageID = -1
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--input') {
+      imageID += 1
+      var obj = {}
+      obj[convertArgToNiiVueKey('input')] = args[i + 1]
+      imagesToLoad.push(obj)
+    }
+    if (args[i].startsWith('--')) {
+      // add the next arg as a property of the object
+      let argName = args[i].replace('--','')
+      argName = convertArgToNiiVueKey(argName)
+      // if argName is not empty (i.e. it is a valid arg that NiiVue knows about)
+      if (argName !== ''){
+        imagesToLoad[imageID][argName] = args[i + 1]
+      }
+    }
+  }
+  console.log(imagesToLoad)
+  return imagesToLoad
 }
 
 function onViewModeClick(viewMode){
@@ -385,44 +450,24 @@ function onAddStandard(standardFile){
 }
 
 function onAddFiles(filePaths){
-  console.log('filePaths', filePaths)
-  socketServer.send(
-    {
-      type: 'addFiles',
-      socketID: socketClientID,
-      value: filePaths
-    }
-  ) 
-  // experimental dynamic adding images to "images" menu item
-  // will reqire more work
-  if (false){
-    let appMenu = Menu.getApplicationMenu()
-    filePaths.forEach((image)=>{
-      let newItem = new MenuItem({
-        label: image,
-        click: ()=>{console.log('clicked', image)},
-        submenu:[
-          {
-            label: 'move to top'
-          },
-          {
-            label: 'move to bottom'
-          },
-          {
-            label: 'move up',
-          },
-          {
-            label: 'move down'
-          },
-          {
-            label: 'visible'
-          }
-        ]
-      })
-      appMenu.items.find((item) => item.id === "images").submenu.append(newItem)
-      Menu.setApplicationMenu(appMenu)
+  // check if first item in filePaths is an object or a string
+  // if string, convert to an object
+  if (typeof filePaths[0] === 'string'){
+    filePaths = filePaths.map((path)=>{
+      return {url: path} // assume all other properties are default if only string paths provided rather than objects
     })
   }
+  console.log('filePaths', filePaths)
+  setTimeout(()=>{
+
+    socketServer.send(
+      {
+        type: 'addFiles',
+        socketID: socketClientID,
+        value: filePaths
+      }
+    )
+  }, 2000)
 }
 
 
@@ -494,9 +539,13 @@ app.whenReady().then(() => {
       fileServerPort: fileServerPort,
       socketServerPort: socketServerPort
     })
+    onIsDrawingOpen()
+    const inputs = parseCommandLineArgs()
+    if (inputs.length > 0){
+      onAddFiles(inputs)
+    }
   }
   Menu.setApplicationMenu(menu)
-  onIsDrawingOpen()
   app.on('open-file', function(ev, path) { // recentdocuments event
     onAddFiles([path])
   });
@@ -507,6 +556,10 @@ app.whenReady().then(() => {
         socketServerPort: socketServerPort
       })
       onIsDrawingOpen()
+      const inputs = parseCommandLineArgs()
+      if (inputs.length > 0){
+        onAddFiles(inputs)
+      }
     }
   })
 })
