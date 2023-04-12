@@ -456,6 +456,12 @@ function NiiVue() {
     nv.setPenValue(nv.opts.penValue, value);
   }
 
+  // runs when the user initiates a Nose left event from the menu bar
+  function onSetSagittalNoseLeft(value) {
+    nv.opts.sagittalNoseLeft = value;
+    nv.drawScene()
+  }
+
   // runs when the user initiates a set draw overwrite event from the menu bar
   function onSetDrawOverwrite(value) {
     nv.drawFillOverwrites = value
@@ -604,6 +610,7 @@ function NiiVue() {
       socket.on('addFiles', onAddFiles)
       socket.on('addStandard', onAddStandard)
       socket.on('addDrawing', onAddDrawing)
+      socket.on('sagittalNoseLeft', onSetSagittalNoseLeft)
       // when the socket io connection is established, log it in the dev console
       socket.on("connect", () => {
         console.log('connected to socket', socket.id)

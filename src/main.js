@@ -195,6 +195,16 @@ function onDrawUndo(){
   )
 }
 
+function onSagittalNoseLeft(){
+  socketServer.send(
+    {
+      type: 'sagittalNoseLeft',
+      socketID: socketClientID,
+      value: menu.getMenuItemById('sagittalNoseLeft').checked 
+    }
+  )
+}
+
 function onShowColorbarClick(){
   socketServer.send(
     {
@@ -675,6 +685,13 @@ appMenuDefinition = [
          id: 'radiological',
         checked: false,
         click: onSetRadiological
+      },
+      {
+        label: 'Sagittal Nose Left',
+        type: 'checkbox',
+        id: 'sagittalNoseLeft',
+        checked: false,
+        click: onSagittalNoseLeft
       },
       { label: 'Render Clip Plane' ,
         type: 'checkbox',
