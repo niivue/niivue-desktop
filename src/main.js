@@ -123,6 +123,47 @@ function handleSocketServerMessage(message) {
   }
 }
 
+function getAppPath() {
+  const appLoc = app.getAppPath('exe')
+  let fullAppPath = path.dirname(appLoc)
+  if (process.platform === 'darwin') {
+    // on mac, the app path is the .app folder, not the executable
+    fullAppPath = path.join(
+      path.dirname(fullAppPath),
+      'MacOS',
+      // app.name
+    )
+  }
+  console.log('appPath', fullAppPath)
+  return fullAppPath
+}
+
+function onInstallCLI() {
+  const appPath = getAppPath()
+  // const cliPath = path.join(appPath, 'resources', 'cli', 'niivue')
+  // const cliInstallPath = '/usr/local/bin/niivue'
+  // const fs = require('fs')
+  // fs.copyFile(cliPath, cliInstallPath, (err) => {
+    // if (err) throw err;
+    // console.log('niivue was copied to /usr/local/bin');
+  // });
+
+  // add appPath to the user's PATH in the current SHELL
+  const { exec } = require('child_process')
+  if (process.platform === 'darwin') {
+    exec(`echo 'export PATH=$PATH:${appPath}' >> ~/.zprofile`, (err, stdout, stderr) => {
+      if (err) {
+        // node couldn't execute the command
+        console.log('error', err)
+        return
+      }
+      // the *entire* stdout and stderr (buffered)
+      console.log(`stdout: ${stdout}`)
+      console.log(`stderr: ${stderr}`)
+    })
+  }
+}
+
 function parseCommandLineArgs() {
   const args = process.argv.slice(1)
   const imagesToLoad = onCommandLineArgs(args)
@@ -544,7 +585,9 @@ app.whenReady().then(() => {
     if (inputs.length > 0){
       onAddFiles(inputs)
     }
+    
   }
+  getAppPath()
   Menu.setApplicationMenu(menu)
   app.on('open-file', function(ev, path) { // recentdocuments event
     onAddFiles([path])
@@ -974,6 +1017,12 @@ appMenuDefinition = [
         click: async () => {
           const { shell } = require('electron')
           await shell.openExternal('https://github.com/niivue/niivue')
+        }
+      },
+      {
+        label: 'Install CLI to PATH',
+        click: async () => {
+          onInstallCLI()
         }
       },
       {
