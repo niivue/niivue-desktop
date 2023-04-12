@@ -316,7 +316,9 @@ function NiiVue() {
 
   // check if a drawing is open
   async function isDrawingOpen() {
-    return (nv.drawBitmap !== null);
+    let value = nv.drawBitmap !== null
+    socket.emit('isDrawingOpen', value)
+    return value;
   }
 
   // runs when the user ititiates a save drawing event from the menu bar
@@ -448,6 +450,8 @@ function NiiVue() {
       default:
         break;
     }
+    // update the state of isDrawing in the app
+    isDrawingOpen()
   }
 
   // runs when the user initiates a set draw filled event from the menu bar
