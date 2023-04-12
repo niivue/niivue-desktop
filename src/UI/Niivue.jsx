@@ -43,10 +43,11 @@ function makeColorGradients(colorMapValues) {
 
 function Layer(props) {
   const image = props.image
+  const colorMaps = props.colorMaps || []
   const [detailsOpen, setDetailsOpen] = React.useState(false)
   const [color, setColor] = React.useState(image.colorMap)
   let ArrowIcon = detailsOpen ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />
-  let allColors = image.colorMaps().map((colorName) => {
+  let allColors = colorMaps.map((colorName) => {
     // omit drawing color maps
     if (colorName.startsWith("$")) {
       return
@@ -264,6 +265,7 @@ function NiiVue() {
         <Layer
           key={layer.id}
           image={layer}
+          colorMaps={nv.colorMaps()|| []}
           onColorMapChange={onColorMapChange}
           onRemoveLayer={onRemoveLayer}
           colorMapValues={nv.colormapFromKey(layer.colorMap)}
