@@ -151,7 +151,7 @@ function onInstallCLI() {
   // add appPath to the user's PATH in the current SHELL
   const { exec } = require('child_process')
   if (process.platform === 'darwin') {
-    exec(`echo 'export PATH=$PATH:${appPath}' >> ~/.zprofile`, (err, stdout, stderr) => {
+    exec(`echo '\n#NiiVue path for CLI usage\nexport PATH=$PATH:${appPath}\n' >> ~/.zprofile`, (err, stdout, stderr) => {
       if (err) {
         // node couldn't execute the command
         console.log('error', err)
