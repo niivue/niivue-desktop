@@ -265,10 +265,10 @@ function NiiVue() {
         <Layer
           key={layer.id}
           image={layer}
-          colorMaps={nv.colorMaps()|| []}
+          colorMaps={nv.colormaps()|| []}
           onColorMapChange={onColorMapChange}
           onRemoveLayer={onRemoveLayer}
-          colorMapValues={nv.colormapFromKey(layer.colorMap)}
+          colorMapValues={nv.colormapFromKey(layer.colormap)}
           getColorMapValues={(colorMapName) => { return nv.colormapFromKey(colorMapName) }}
         />
       )
